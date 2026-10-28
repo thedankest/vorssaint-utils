@@ -71,7 +71,8 @@ final class QuitAppsPanelController {
         panel.backgroundColor = .clear
         panel.hasShadow = true
         panel.hidesOnDeactivate = false
-        panel.level = .floating
+        // The originating island can stay pinned above the status bar.
+        panel.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 2)
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary,
                                     .transient, .ignoresCycle]
 
@@ -179,6 +180,7 @@ final class QuitAppsPanelController {
         case kVK_Escape:
             close()
         case kVK_Return, kVK_ANSI_KeypadEnter:
+            guard !event.isARepeat else { return }
             if flags.contains(.command), flags.contains(.option) {
                 if model.buttons.contains(.allExceptFront) { quitAll(.allExceptFront) }
             } else if flags.contains(.command) {
@@ -187,6 +189,7 @@ final class QuitAppsPanelController {
                 activate(model.focus)
             }
         case kVK_Delete where flags.contains(.command):
+            guard !event.isARepeat else { return }
             if case .row(let pid) = model.focus { quitOne(pid) }
         case kVK_UpArrow: model.move(.up)
         case kVK_DownArrow: model.move(.down)
@@ -222,7 +225,7 @@ final class QuitAppsPanelController {
         }
         globalMonitor = NSEvent.addGlobalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            self?.close()
+            if !AssistiveKeyboard.ownsCocoaPoint(NSEvent.mouseLocation) { self?.close() }
         }
     }
 }

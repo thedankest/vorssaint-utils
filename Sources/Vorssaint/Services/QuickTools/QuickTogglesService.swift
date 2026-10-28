@@ -169,7 +169,8 @@ final class QuickTogglesService: ObservableObject {
 
     /// Asks one app to quit, exceptions included: picking its row is explicit.
     func quitApp(pid: pid_t) -> Bool {
-        guard let app = NSRunningApplication(processIdentifier: pid),
+        guard quitAppsAvailable,
+              let app = NSRunningApplication(processIdentifier: pid),
               let bundleID = app.bundleIdentifier,
               !QuickTogglesSupport.vorssaintBundleIdentifiers.contains(bundleID) else { return false }
         return app.terminate()
@@ -182,27 +183,14 @@ final class QuickTogglesService: ObservableObject {
                           isTerminated: app.isTerminated)
     }
 
-    /// The app the user is working in. From the menu panel, Settings or the
-    /// Command Bar Vorssaint itself is frontmost, so the owner of the front
-    /// ordinary window of a regular app answers instead; owner ids need no
-    /// Screen Recording grant.
+    /// Preserve the app in front, or the source remembered before our panel
+    /// took focus. An unrelated visible window is not a safe substitute.
     func frontmostAppPID() -> pid_t? {
         let ownPID = ProcessInfo.processInfo.processIdentifier
         if let front = NSWorkspace.shared.frontmostApplication, front.processIdentifier != ownPID {
             return front.processIdentifier
         }
-        let regularPIDs = Set(NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular }
-            .map(\.processIdentifier))
-        let info = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements],
-                                              kCGNullWindowID) as? [[String: Any]] ?? []
-        let windows = info.compactMap { window -> (layer: Int, ownerPID: Int32)? in
-            guard let layer = window[kCGWindowLayer as String] as? Int,
-                  let pid = window[kCGWindowOwnerPID as String] as? Int32,
-                  regularPIDs.contains(pid) else { return nil }
-            return (layer, pid)
-        }
-        return QuickTogglesSupport.frontmostWindowOwner(windows, excluding: ownPID)
+        return (NSApp.delegate as? AppDelegate)?.panelActivationSourcePID
     }
 
     func addQuitAllException(_ bundleID: String) {

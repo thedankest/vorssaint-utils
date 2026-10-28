@@ -60,14 +60,6 @@ enum QuickTogglesQuitAllTests {
             "batch quit hits regular non-exceptions; keeping the front app drops only that process")
 
         suite.expect(
-            QuickTogglesSupport.frontmostWindowOwner(
-                [(layer: 25, ownerPID: 50), (layer: 0, ownerPID: 1), (layer: 0, ownerPID: 7),
-                 (layer: 0, ownerPID: 9)], excluding: 1) == 7
-                && QuickTogglesSupport.frontmostWindowOwner(
-                    [(layer: 0, ownerPID: 1), (layer: 3, ownerPID: 7)], excluding: 1) == nil,
-            "the front app is the first ordinary window Vorssaint does not own, if any")
-
-        suite.expect(
             [(GlobalShortcutRole.quitAll, DefaultsKey.quitAppsShortcutEnabled),
              (GlobalShortcutRole.quitAllExceptFront, DefaultsKey.quitAppsExceptFrontShortcutEnabled)]
                 .allSatisfy { role, enableKey in

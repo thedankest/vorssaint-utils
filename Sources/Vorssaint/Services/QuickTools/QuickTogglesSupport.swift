@@ -162,13 +162,6 @@ enum QuickTogglesSupport {
         .map(\.pid)
     }
 
-    /// The app the user was working in when Vorssaint's own panel or bar holds
-    /// focus: the owner of the frontmost ordinary window (layer 0) that is not
-    /// ours. `windows` is in front-to-back order, as the window list reports it.
-    static func frontmostWindowOwner(_ windows: [(layer: Int, ownerPID: Int32)],
-                                     excluding ownPID: Int32) -> Int32? {
-        windows.first { $0.layer == 0 && $0.ownerPID != ownPID }?.ownerPID
-    }
 }
 
 /// One running app as Quit apps sees it, reduced to the facts the targeting
